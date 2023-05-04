@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Thingspeak Data</title>
+  <!-- Tambahkan link CSS untuk styling -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Tambahkan link library Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.6.0/chart.min.js"></script>
+  <style>
+  #realtimeChart {
+  width: 50%;
+  display: inline-block;
+  vertical-align: top;
+}
+
+#historicalChart {
+  width: 50%;
+  display: inline-block;
+  vertical-align: top;
+  margin-left: 20px;
+}
+
+#historicalData {
+  margin-top: 20px;
+  font-family: Arial, sans-serif;
+}
+
+#historicalData table {
+  width: 50%;
+  border-collapse: collapse;
+}
+
+#historicalData table th,
+#historicalData table td {
+  padding: 5px;
+  text-align: center;
+  border: 1px solid black;
+}
+
+#historicalData table th {
+  background-color: #f2f2f2;
+}
+</style>
+</head>
+<body>
+  <h1 style="text-align: center;">Thingspeak Data</h1>
+
+  <div style="display: flex; justify-content: center;">
+  <div style="width: 50%;">
+    <canvas id="realtimeChart" style="box-sizing: border-box; width: 100%; height: 400px;"></canvas>
+  </div>
+  <div style="width: 40%;">
+    <div id="latestData" style="font-family: Arial, sans-serif; font-size: 13px;"></div>
+  </div>
+</div>
+
+<style>
+  #latestData {
+    margin-top: 5px;
+    padding-left: 5px;
+  }
+  
+  #latestData ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  #latestData li {
+    margin-bottom: 5px;
+  }
+</style>
+
+
+  <div id="data"></div>
+
+  <script>
+    // Masukkan API key dan Channel ID Thingspeak Anda
+    const API_KEY = '8228UZ6M7TFC412F';
+    const CHANNEL_ID = 2122215;
+
+    // Tambahkan URL API Thingspeak untuk data realtime
+    const realtimeURL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&results=10`;
+
+    // Buat fungsi untuk menampilkan data dalam bentuk grafik dan teks
+    async function showData() {
+      // Ambil data realtime
+      const realtimeFeeds = await getData(realtimeURL);
+      const realtimeData = parseData(realtimeFeeds);
+
+      // Tampilkan data realtime dalam bentuk grafik
+const realtimeLabels = realtimeData.map(d => d.time.toLocaleTimeString());
+const realtimeTempData = realtimeData.map(d => d.temperature);
+const realtimeHumData = realtimeData.map(d => d.humidity);
+const realtimeCtx = document.getElementById('realtimeChart').getContext('2d');
+const realtimeChart = new Chart(realtimeCtx, {
+  type: 'line',
+  data: {
+    labels: realtimeLabels,
+    datasets: [{
+      label: 'Temperature (C)',
+      data: realtimeTempData,
+      borderColor: 'rgb(255, 99, 132)',
+      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      borderWidth: 2
+    },
+    {
+      label: 'Humidity (%)',
+      data: realtimeHumData,
+      borderColor: 'rgb(54, 162, 235)',
+      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: false,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Realtime Data'
+      },
+      legend: {
+        position: 'top'
+      }
+    },
+    aspectRatio: 2,
+    scales: {
+      x: {
+        position: 'bottom'
+      },
+      y: {
+        position: 'left'
+      }
+    }
+  }
+});
+
+  // Tampilkan data dalam bentuk teks
+const latestTemp = realtimeData[realtimeData.length-1].temperature;
+const latestHum = realtimeData[realtimeData.length-1].humidity;
+const dataContainer = document.getElementById('latestData');
+const dataHTML = `
+  <h2>Data Terbaru:</h2>
+  <ul>
+    ${realtimeData.slice(-10).reverse().map(d => `
+      <li>
+        <span style="font-weight: bold; margin-right: 5px;">${d.time.toLocaleTimeString()}</span>
+        <span>Temperature: ${d.temperature}C</span>
+        <span style="margin-left: 10px;">Humidity: ${d.humidity}%</span>
+      </li>
+    `).join('')}
+  </ul>
+`;
+dataContainer.innerHTML = dataHTML;
+
+
+}
+
+// Buat fungsi untuk mengubah data menjadi format yang lebih mudah diproses
+function parseData(feeds) {
+  return feeds.map(feed => {
+    const time = new Date(feed.created_at);
+    const temperature = parseFloat(feed.field1);
+    const humidity = parseFloat(feed.field2);
+    return { time, temperature, humidity };
+  });
+}
+
+// Buat fungsi untuk mengambil data dari API Thingspeak
+async function getData(url) {
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.feeds;
+}
+
+
+// Panggil fungsi untuk menampilkan data
+showData();
+setInterval(function() {
+      location.reload();
+    }, 8000);
+  </script>
+</body>
+</html>
