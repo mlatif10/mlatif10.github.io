@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Thingspeak Data</title>
+  <title>Data Realtime</title>
   <!-- Tambahkan link CSS untuk styling -->
   <link rel="stylesheet" href="style.css">
   <!-- Tambahkan link library Chart.js -->
@@ -44,7 +44,7 @@
 </style>
 </head>
 <body>
-  <h1 style="text-align: center;">Thingspeak Data</h1>
+  <h1 style="text-align: center;">Data Realtime</h1>
 
   <div style="display: flex; justify-content: center;">
   <div style="width: 50%;">
@@ -89,7 +89,10 @@
       const realtimeData = parseData(realtimeFeeds);
 
       // Tampilkan data realtime dalam bentuk grafik
-const realtimeLabels = realtimeData.map(d => d.time.toLocaleTimeString());
+const realtimeLabels = realtimeData.map(d => {
+  const date = new Date(d.time);
+  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.toLocaleTimeString()}`;
+});
 const realtimeTempData = realtimeData.map(d => d.temperature);
 const realtimeHumData = realtimeData.map(d => d.humidity);
 const realtimeCtx = document.getElementById('realtimeChart').getContext('2d');
@@ -144,7 +147,7 @@ const dataHTML = `
   <ul>
     ${realtimeData.slice(-10).reverse().map(d => `
       <li>
-        <span style="font-weight: bold; margin-right: 5px;">${d.time.toLocaleTimeString()}</span>
+        <span style="font-weight: bold; margin-right: 5px;">${d.time.toLocaleDateString()} ${d.time.toLocaleTimeString()}</span>
         <span>Temperature: ${d.temperature}C</span>
         <span style="margin-left: 10px;">Humidity: ${d.humidity}%</span>
       </li>
